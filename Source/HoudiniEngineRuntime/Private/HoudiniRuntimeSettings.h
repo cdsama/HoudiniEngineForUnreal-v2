@@ -29,6 +29,7 @@
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
 #include "Engine/EngineTypes.h"
+#include "SetupHoudiniEnvironmentBase.h"
 
 #include "HoudiniRuntimeSettings.generated.h"
 
@@ -263,6 +264,12 @@ protected:
 		// Sets HOUDINI_AUDIO_DSO_PATH
 		UPROPERTY(GlobalConfig, EditAnywhere, Category = HoudiniEngineInitialization)
 		FString AudioDsoSearchPath;
+
+		UPROPERTY(GlobalConfig, EditAnywhere, Category = HoudiniEngineInitialization)
+		FString HoudiniWorkingDirectory;
+
+		UPROPERTY(GlobalConfig, EditAnywhere, Category = HoudiniEngineInitialization)
+		TSoftClassPtr<USetupHoudiniEnvironmentBase> SetupHoudiniEnvironmentClass;
 
 		//-------------------------------------------------------------------------------------------------------------
 		// PDG Commandlet import

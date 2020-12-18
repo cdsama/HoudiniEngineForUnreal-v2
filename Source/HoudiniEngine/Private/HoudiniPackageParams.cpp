@@ -152,6 +152,27 @@ FHoudiniPackageParams::GetPackagePath() const
 			PackagePath = BakeFolder;
 		}
 		break;
+		// modified by ks chendi for save extra generated assets
+        case EPackageMode::CookToLevelDir:
+        {
+			if (!IsValid(OuterPackage))
+			{
+                // Temporary Folder
+                PackagePath = TempCookFolder;
+                //  Add a subdir for the HDA
+                if (!HoudiniAssetName.IsEmpty())
+                    PackagePath += TEXT("/") + HoudiniAssetName;
+                // Add a subdir using the owner component GUID if possible
+                if (ComponentGUID.IsValid())
+                    PackagePath += TEXT("/") + ComponentGUID.ToString().Left(PACKAGE_GUID_LENGTH);
+			}
+			else
+			{
+                PackagePath = FPackageName::GetLongPackagePath(OuterPackage->GetOuter()->GetName()) +
+                    +TEXT("/") + OuterPackage->GetName() + TEXT("_Assets/") + HoudiniAssetActorName;
+			}
+        }
+		break;
 	}
 
 	return PackagePath;

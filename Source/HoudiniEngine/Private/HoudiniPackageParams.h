@@ -39,7 +39,9 @@ enum class EPackageMode : int8
 {
 	CookToLevel,
 	CookToTemp,
-	Bake
+	Bake,
+	// modified by ks chendi for save extra generated assets
+	CookToLevelDir
 };
 
 UENUM()

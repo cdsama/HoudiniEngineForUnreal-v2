@@ -179,12 +179,20 @@ FHoudiniEngineCommands::OpenInHoudini()
 	// Then open the hip file in Houdini
 	FString LibHAPILocation = FHoudiniEngine::Get().GetLibHAPILocation();
 	FString HoudiniLocation = LibHAPILocation + TEXT("//houdini");
+
+	// modified by ks chendi for debug scene
+    const UHoudiniRuntimeSettings* HoudiniRuntimeSettings = GetDefault<UHoudiniRuntimeSettings>();
+    FString HoudiniWorkingDirectory = HoudiniRuntimeSettings->HoudiniWorkingDirectory;
+    if (HoudiniWorkingDirectory.IsEmpty()) {
+        HoudiniWorkingDirectory = FPlatformProcess::UserTempDir();
+    }
+
 	FPlatformProcess::CreateProc(
 		*HoudiniLocation,
 		*UserTempPath,
 		true, false, false,
 		nullptr, 0,
-		FPlatformProcess::UserTempDir(),
+		*HoudiniWorkingDirectory,
 		nullptr, nullptr);
 
 	// Unfortunately, LaunchFileInDefaultExternalApplication doesn't seem to be working properly
@@ -853,6 +861,12 @@ FHoudiniEngineCommands::OpenSessionSync()
 	EHoudiniRuntimeSettingsSessionType SessionType = HoudiniRuntimeSettings->SessionType;
 	FString ServerPipeName = HoudiniRuntimeSettings->ServerPipeName;
 	int32 ServerPort = HoudiniRuntimeSettings->ServerPort;
+
+	// modified by ks chendi for debug scene
+	FString HoudiniWorkingDirectory = HoudiniRuntimeSettings->HoudiniWorkingDirectory;
+	if (HoudiniWorkingDirectory.IsEmpty()) {
+		HoudiniWorkingDirectory = FPlatformProcess::UserTempDir();
+	}
 	
 	FString SessionSyncArgs = TEXT("-hess=");
 	if (SessionType == EHoudiniRuntimeSettingsSessionType::HRSST_NamedPipe)
@@ -891,7 +905,7 @@ FHoudiniEngineCommands::OpenSessionSync()
 			*SessionSyncArgs,
 			true, false, false,
 			nullptr, 0,
-			FPlatformProcess::UserTempDir(),
+			*HoudiniWorkingDirectory,
 			nullptr, nullptr);
 
 		// Keep track of the SessionSync ProcHandle

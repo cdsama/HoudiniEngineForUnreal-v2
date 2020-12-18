@@ -65,6 +65,24 @@ void FHoudiniEngineRuntime::StartupModule()
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
 	// Store the instance.
 	FHoudiniEngineRuntime::HoudiniEngineRuntimeInstance = this;
+
+#if WITH_EDITOR
+    const UHoudiniRuntimeSettings* Settings = GetDefault<UHoudiniRuntimeSettings>();
+	auto SoftClass = Settings->SetupHoudiniEnvironmentClass;
+	SoftClass.LoadSynchronous();
+	if (SoftClass.IsValid())
+	{
+		UClass* RealClass = SoftClass.Get();
+		if (IsValid(RealClass))
+		{
+            USetupHoudiniEnvironmentBase* DefaultObject = RealClass->GetDefaultObject<USetupHoudiniEnvironmentBase>();
+            if (IsValid(DefaultObject))
+            {
+                DefaultObject->SetupHoudiniEnvironment();
+            }
+		}
+	}
+#endif
 }
 
 

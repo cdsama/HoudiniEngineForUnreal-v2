@@ -303,6 +303,10 @@ FHoudiniLandscapeTranslator::CreateLandscape(
 		LayerPackageParams.ObjectName = TileName;
 	}
 
+	// modified by ks chendi for save extra generated assets
+    LayerPackageParams.PackageMode = EPackageMode::CookToLevelDir;
+	LayerPackageParams.OuterPackage = InWorld;
+
 	// See if the current heightfield has an unreal_material or unreal_hole_material assigned to it
 	UMaterialInterface* LandscapeMaterial = nullptr;
 	UMaterialInterface* LandscapeHoleMaterial = nullptr;
@@ -3125,7 +3129,12 @@ FHoudiniLandscapeTranslator::GetLandscapeMaterials(
 				AttribMaterials, Materials);
 		}
 
-		if (AttribMaterials.exists && AttribMaterials.owner != HAPI_ATTROWNER_PRIM && AttribMaterials.owner != HAPI_ATTROWNER_DETAIL)
+		if (AttribMaterials.exists 
+			&& AttribMaterials.owner != HAPI_ATTROWNER_PRIM 
+			&& AttribMaterials.owner != HAPI_ATTROWNER_DETAIL
+            && AttribMaterials.originalOwner != HAPI_ATTROWNER_PRIM
+            && AttribMaterials.originalOwner != HAPI_ATTROWNER_DETAIL
+			)
 		{
 			HOUDINI_LOG_WARNING(TEXT("Landscape:  unreal_material must be a primitive or detail attribute, ignoring attribute."));
 			AttribMaterials.exists = false;
