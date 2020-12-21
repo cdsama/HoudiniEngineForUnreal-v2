@@ -57,12 +57,6 @@
 #include "HoudiniAssetComponent.h"
 
 
-// Used parameter tags
-#define HAPI_PARAM_TAG_NOSWAP						"hengine_noswap"
-#define HAPI_PARAM_TAG_FILE_READONLY	            "filechooser_mode"
-#define HAPI_PARAM_TAG_UNITS						"units"
-#define HAPI_PARAM_TAG_ASSET_REF					"asset_ref"
-
 // Default values for certain UI min and max parameter values
 #define HAPI_UNREAL_PARAM_INT_UI_MIN				0
 #define HAPI_UNREAL_PARAM_INT_UI_MAX				10
@@ -108,6 +102,23 @@ FHoudiniParameterTranslator::UpdateParameters(UHoudiniAssetComponent* HAC)
 		HAC->Parameters = NewParameters;
 	}
 
+
+	return true;
+}
+
+bool
+FHoudiniParameterTranslator::OnPreCookParameters(UHoudiniAssetComponent* HAC)
+{
+	// Call OnPreCook for all parameters.
+	// Parameters can use this to ensure that any cached / non-cooking state is properly
+	// synced before the cook starts (Looking at you, ramp parameters!)
+	for (UHoudiniParameter* Param : HAC->Parameters)
+	{
+		if (!Param || Param->IsPendingKill())
+			continue;
+
+		Param->OnPreCook();
+	}
 
 	return true;
 }
@@ -2722,8 +2733,6 @@ bool FHoudiniParameterTranslator::UploadMultiParmValues(UHoudiniParameter* InPar
 				FHoudiniEngine::Get().GetSession(), MultiParam->GetNodeId(),
 				MultiParam->GetParmId(), Index + MultiParam->InstanceStartOffset))
 				return false;
-
-			Size -= 1;
 		}
 	}
 
