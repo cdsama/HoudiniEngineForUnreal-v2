@@ -296,6 +296,7 @@ FHoudiniInstanceTranslator::CreateAllInstancersFromHoudiniOutput(
 				VariationMaterials.Empty();
 
 			USceneComponent* NewInstancerComponent = nullptr;
+			// modified by ks zhaoshuai2: bug fix, wrong parameters passed to CreateOrUpdateInstanceComponent, missed 'InstancerObjectIdx'
 			if (!CreateOrUpdateInstanceComponent(
 				InstancedObject, InstancedObjectTransforms, 
 				InstancedOutputPartData.AllPropertyAttributes, CurHGPO,
@@ -303,6 +304,7 @@ FHoudiniInstanceTranslator::CreateAllInstancersFromHoudiniOutput(
 				InstancedOutputPartData.bSplitMeshInstancer,
 				InstancedOutputPartData.bIsFoliageInstancer,
 				VariationMaterials,
+				0,	// this param missed in github version
 				InstancedOutputPartData.bForceHISM))
 			{
 				// TODO??
