@@ -1238,6 +1238,9 @@ FHoudiniInstanceTranslator::GetAttributeInstancerObjectsAndTransforms(
 	// Array used to store the split values per objects
 	// Will only be used if we have a split attribute
 	TArray<TArray<FString>> SplitAttributeValuesPerObject;
+	
+	// modified by ks zhaoshuai2 : bug fix, 'unreal_level_path' do not work with attribute 'unreal_instance' instances
+	TArray<TArray<int32>> PtIndexAttributePerObject;
 
 	if (AttribInfo.owner == HAPI_ATTROWNER_DETAIL)
 	{
@@ -1298,6 +1301,14 @@ FHoudiniInstanceTranslator::GetAttributeInstancerObjectsAndTransforms(
 
 			if(bHasSplitAttribute)
 				SplitAttributeValuesPerObject.Add(AllSplitAttributeValues);
+
+			// modified by ks zhaoshuai2 : bug fix, 'unreal_level_path' do not work with attribute 'unreal_instance' instances
+			TArray<int32> PtIndices;
+			for (int32 Idx = 0; Idx < AllSplitAttributeValues.Num(); ++Idx)
+			{
+				PtIndices.Add(Idx);
+			}
+			PtIndexAttributePerObject.Add(PtIndices);
 		}
 	}
 	else
@@ -1402,18 +1413,24 @@ FHoudiniInstanceTranslator::GetAttributeInstancerObjectsAndTransforms(
 				const FString & InstancePath = Iter.Key;
 				TArray<FTransform> ObjectTransforms;
 				TArray<FString> ObjectSplitValues;
+				// modified by ks zhaoshuai2 : bug fix, 'unreal_level_path' do not work with attribute 'unreal_instance' instances
+				TArray<int32> PtIndices;
 				for (int32 Idx = 0; Idx < PointInstanceValues.Num(); ++Idx)
 				{
 					if (InstancePath.Equals(PointInstanceValues[Idx]))
 					{
 						ObjectTransforms.Add(InstancerUnrealTransforms[Idx]);
 						ObjectSplitValues.Add(AllSplitAttributeValues[Idx]);
+						// modified by ks zhaoshuai2 : bug fix, 'unreal_level_path' do not work with attribute 'unreal_instance' instances
+						PtIndices.Add(Idx);
 					}
 				}
 
 				OutInstancedObjects.Add(AttributeObject);
 				OutInstancedTransforms.Add(ObjectTransforms);
 				SplitAttributeValuesPerObject.Add(ObjectSplitValues);
+				// modified by ks zhaoshuai2 : bug fix, 'unreal_level_path' do not work with attribute 'unreal_instance' instances
+				PtIndexAttributePerObject.Add(PtIndices);
 				Success = true;
 			}
 		}
@@ -1447,6 +1464,8 @@ FHoudiniInstanceTranslator::GetAttributeInstancerObjectsAndTransforms(
 
 		TArray<FTransform>& CurrentTransforms = UnsplitInstancedTransforms[ObjIdx];
 		TArray<FString>& CurrentSplits = SplitAttributeValuesPerObject[ObjIdx];
+		// modified by ks zhaoshuai2 : bug fix, 'unreal_level_path' do not work with attribute 'unreal_instance' instances
+		const TArray<int32>& CurrentIndices = PtIndexAttributePerObject[ObjIdx];
 
 		int32 NumInstances = CurrentTransforms.Num();
 		if (CurrentSplits.Num() != NumInstances)
@@ -1462,18 +1481,21 @@ FHoudiniInstanceTranslator::GetAttributeInstancerObjectsAndTransforms(
 			if (bHasAnyPerSplitAttributes)
 			{
 				FHoudiniInstancedOutputPerSplitAttributes& PerSplitAttributes = OutPerSplitAttributes.FindOrAdd(SplitAttrValue);
-				if (bHasLevelPaths && PerSplitAttributes.LevelPath.IsEmpty() && AllLevelPaths.IsValidIndex(InstIdx))
+				// modified by ks zhaoshuai2 : bug fix, 'unreal_level_path' do not work with attribute 'unreal_instance' instances
+				int32 PtIndex = CurrentIndices[InstIdx];
+				if (bHasLevelPaths && PerSplitAttributes.LevelPath.IsEmpty() && AllLevelPaths.IsValidIndex(PtIndex))
 				{
-					PerSplitAttributes.LevelPath = AllLevelPaths[InstIdx];
+					PerSplitAttributes.LevelPath = AllLevelPaths[PtIndex];
 				}
-				if (bHasBakeActorNames && PerSplitAttributes.BakeActorName.IsEmpty() && AllBakeActorNames.IsValidIndex(InstIdx))
+				if (bHasBakeActorNames && PerSplitAttributes.BakeActorName.IsEmpty() && AllBakeActorNames.IsValidIndex(PtIndex))
 				{
-					PerSplitAttributes.BakeActorName = AllBakeActorNames[InstIdx];
+					PerSplitAttributes.BakeActorName = AllBakeActorNames[PtIndex];
 				}
-				if (bHasBakeOutlinerFolders && PerSplitAttributes.BakeOutlinerFolder.IsEmpty() && AllBakeOutlinerFolders.IsValidIndex(InstIdx))
+				if (bHasBakeOutlinerFolders && PerSplitAttributes.BakeOutlinerFolder.IsEmpty() && AllBakeOutlinerFolders.IsValidIndex(PtIndex))
 				{
-					PerSplitAttributes.BakeOutlinerFolder = AllBakeOutlinerFolders[InstIdx];
+					PerSplitAttributes.BakeOutlinerFolder = AllBakeOutlinerFolders[PtIndex];
 				}
+				// modified by ks end
 			}
 		}
 
